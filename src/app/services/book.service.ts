@@ -1,0 +1,57 @@
+import { Injectable } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { Observable, map } from 'rxjs';
+import {
+  SearchResponse,
+  BookDetail,
+  SubjectResponse,
+} from '../models/book.model';
+
+@Injectable({ providedIn: 'root' })
+export class BookService {
+  private baseUrl = 'https://openlibrary.org';
+  private coversUrl = 'https://covers.openlibrary.org/b/id';
+
+  constructor(private http: HttpClient) {}
+
+  search(query: string, limit = 20, offset = 0): Observable<SearchResponse> {
+    return this.http.get<SearchResponse>(
+      `${this.baseUrl}/search.json`,
+      { params: { q: query, limit: limit.toString(), offset: offset.toString() } }
+    );
+  }
+
+  getBookDetail(workId: string): Observable<BookDetail> {
+    return this.http.get<BookDetail>(
+      `${this.baseUrl}/works/${workId}.json`
+    );
+  }
+
+  getSubjectBooks(subject: string, limit = 12): Observable<SubjectResponse> {
+    return this.http.get<SubjectResponse>(
+      `${this.baseUrl}/subjects/${subject}.json`,
+      { params: { limit: limit.toString() } }
+    );
+  }
+
+  getCoverUrl(coverId: number | undefined, size: 'S' | 'M' | 'L' = 'M'): string {
+    if (!coverId) {
+      return '';
+    }
+    return `${this.coversUrl}/${coverId}-${size}.jpg`;
+  }
+
+  extractDescription(desc: string | { type: string; value: string } | undefined): string {
+    if (!desc) {
+      return '';
+    }
+    if (typeof desc === 'string') {
+      return desc;
+    }
+    return desc.value || '';
+  }
+
+  extractWorkId(key: string): string {
+    return key.replace('/works/', '');
+  }
+}
