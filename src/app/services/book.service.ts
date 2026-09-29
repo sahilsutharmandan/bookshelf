@@ -17,7 +17,7 @@ export class BookService {
   search(query: string, limit = 20, offset = 0): Observable<SearchResponse> {
     return this.http.get<SearchResponse>(
       `${this.baseUrl}/search.json`,
-      { params: { q: query, limit: limit.toString(), offset: offset.toString() } }
+      { params: { q: query, limit: limit.toString(), page: offset.toString() } }
     );
   }
 
@@ -45,10 +45,7 @@ export class BookService {
     if (!desc) {
       return '';
     }
-    if (typeof desc === 'string') {
-      return desc;
-    }
-    return desc.value || '';
+    return desc as string;
   }
 
   extractWorkId(key: string): string {

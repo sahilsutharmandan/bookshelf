@@ -1,6 +1,6 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { Subject, Subscription, debounceTime, distinctUntilChanged, switchMap, of } from 'rxjs';
+import { Subject, Subscription, debounceTime, distinctUntilChanged, mergeMap, of } from 'rxjs';
 import { BookService } from '../../services/book.service';
 import { BookCardComponent } from '../../components/book-card/book-card.component';
 import { BookSearchResult } from '../../models/book.model';
@@ -224,7 +224,7 @@ export class SearchComponent implements OnInit, OnDestroy {
     this.sub = this.searchSubject.pipe(
       debounceTime(350),
       distinctUntilChanged(),
-      switchMap(q => {
+      mergeMap(q => {
         if (!q.trim()) {
           this.searched = false;
           return of(null);
