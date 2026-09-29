@@ -4,14 +4,14 @@ import { Component, Input, Output, EventEmitter } from '@angular/core';
   selector: 'app-star-rating',
   standalone: true,
   template: `
-    <div class="stars" role="radiogroup" aria-label="Rating">
+    <div class="stars">
       @for (star of stars; track star) {
-        <button
+        <span
           class="star"
-          [class.filled]="star <= rating"
+          [class.filled]="star <= (hoverValue || rating)"
           (click)="setRating(star)"
-          [attr.aria-label]="star + ' star' + (star > 1 ? 's' : '')"
-        >★</button>
+          (mouseenter)="hoverValue = star"
+        >★</span>
       }
     </div>
   `,
@@ -45,6 +45,7 @@ export class StarRatingComponent {
   @Output() ratingChange = new EventEmitter<number>();
 
   stars = [1, 2, 3, 4, 5];
+  hoverValue = 0;
 
   setRating(value: number): void {
     this.rating = value;
