@@ -9,13 +9,7 @@ import { BookService } from '../../services/book.service';
   template: `
     <a [routerLink]="['/book', workId]" class="card">
       <div class="cover">
-        @if (coverUrl) {
-          <img [src]="coverUrl" [alt]="title" loading="lazy" />
-        } @else {
-          <div class="placeholder">
-            <span>📚</span>
-          </div>
-        }
+        <img [src]="coverUrl" [alt]="title" loading="lazy" />
       </div>
       <div class="info">
         <h3 class="title">{{ title }}</h3>
@@ -120,7 +114,7 @@ export class BookCardComponent {
   coverUrl = '';
 
   get authors(): string {
-    return this.authorList.length > 0 ? this.authorList.join(', ') : 'Unknown author';
+    return this.authorList.join(',');
   }
 
   constructor(private bookService: BookService) {}
