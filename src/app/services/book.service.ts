@@ -15,9 +15,10 @@ export class BookService {
   constructor(private http: HttpClient) {}
 
   search(query: string, limit = 20, offset = 0): Observable<SearchResponse> {
+    const page = Math.ceil(offset / limit) || 1;
     return this.http.get<SearchResponse>(
       `${this.baseUrl}/search.json`,
-      { params: { q: query, limit: limit.toString(), page: offset.toString() } }
+      { params: { q: query, limit: limit.toString(), page: page.toString() } }
     );
   }
 
