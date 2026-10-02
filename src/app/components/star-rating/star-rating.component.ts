@@ -4,14 +4,17 @@ import { Component, Input, Output, EventEmitter } from '@angular/core';
   selector: 'app-star-rating',
   standalone: true,
   template: `
-    <div class="stars">
+    <div class="stars" role="group" aria-label="Your rating" (mouseleave)="hoverValue = 0">
       @for (star of stars; track star) {
-        <span
+        <button
+          type="button"
+          [attr.aria-label]="star + (star === 1 ? ' star' : ' stars')"
+          [attr.aria-pressed]="star === rating"
           class="star"
           [class.filled]="star <= (hoverValue || rating)"
           (click)="setRating(star)"
           (mouseenter)="hoverValue = star"
-        >★</span>
+        >★</button>
       }
     </div>
   `,
@@ -25,10 +28,15 @@ import { Component, Input, Output, EventEmitter } from '@angular/core';
       background: none;
       border: none;
       font-size: 1.5rem;
-      color: var(--border);
-      padding: 0;
+      color: var(--text-muted);
+      padding: 4px;
       line-height: 1;
       transition: color 0.15s, transform 0.15s;
+
+      &:focus-visible {
+        outline: 2px solid var(--primary);
+        outline-offset: 2px;
+      }
 
       &:hover {
         transform: scale(1.15);

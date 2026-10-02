@@ -9,7 +9,11 @@ import { BookService } from '../../services/book.service';
   template: `
     <a [routerLink]="['/book', workId]" class="card">
       <div class="cover">
-        <img [src]="coverUrl" [alt]="title" loading="lazy" />
+        @if (coverUrl) {
+          <img [src]="coverUrl" [alt]="title" loading="lazy" (error)="coverUrl = ''" />
+        } @else {
+          <div class="placeholder" role="img" [attr.aria-label]="title + ': cover unavailable'">📚</div>
+        }
       </div>
       <div class="info">
         <h3 class="title">{{ title }}</h3>
@@ -26,7 +30,10 @@ import { BookService } from '../../services/book.service';
     </a>
   `,
   styles: [`
+    :host { display: block; min-width: 0; height: 100%; }
+
     .card {
+      height: 100%;
       display: flex;
       flex-direction: column;
       background: var(--bg-card);
@@ -114,12 +121,12 @@ export class BookCardComponent {
   coverUrl = '';
 
   get authors(): string {
-    return this.authorList.join(',');
+    return this.authorList.join(', ');
   }
 
   constructor(private bookService: BookService) {}
 
-  ngOnInit(): void {
+  ngOnChanges(): void {
     this.coverUrl = this.bookService.getCoverUrl(this.coverId);
   }
 }

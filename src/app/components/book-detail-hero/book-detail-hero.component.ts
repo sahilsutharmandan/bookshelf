@@ -8,7 +8,7 @@ import { BookService } from '../../services/book.service';
     <div class="hero">
       <div class="cover">
         @if (coverUrl) {
-          <img [src]="coverUrl" [alt]="title" />
+          <img [src]="coverUrl" [alt]="title" (error)="coverUrl = ''" />
         } @else {
           <div class="placeholder">📚</div>
         }
@@ -40,6 +40,7 @@ import { BookService } from '../../services/book.service';
 
     .cover {
       flex-shrink: 0;
+      align-self: flex-start;
       width: 200px;
       border-radius: var(--radius);
       overflow: hidden;
@@ -62,6 +63,7 @@ import { BookService } from '../../services/book.service';
     }
 
     .details {
+      min-width: 0;
       display: flex;
       flex-direction: column;
       gap: 8px;
@@ -108,6 +110,7 @@ import { BookService } from '../../services/book.service';
 
       .cover {
         width: 160px;
+        align-self: center;
       }
 
       .placeholder {
@@ -137,10 +140,10 @@ export class BookDetailHeroComponent {
   constructor(private bookService: BookService) {}
 
   ngOnInit(): void {
-    this.coverUrl = this.bookService.getCoverUrl(this.coverId, 'S');
+    this.coverUrl = this.bookService.getCoverUrl(this.coverId, 'L');
   }
 
   ngOnChanges(): void {
-    this.coverUrl = this.bookService.getCoverUrl(this.coverId, 'S');
+    this.coverUrl = this.bookService.getCoverUrl(this.coverId, 'L');
   }
 }

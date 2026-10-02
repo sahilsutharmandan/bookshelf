@@ -46,7 +46,7 @@ export class BookService {
     if (!desc) {
       return '';
     }
-    return desc as string;
+    return typeof desc === 'string' ? desc : desc.value || '';
   }
 
   extractWorkId(key: string): string {

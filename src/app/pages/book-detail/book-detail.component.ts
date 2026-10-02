@@ -1,6 +1,7 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, DestroyRef, inject, OnInit } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, RouterLink } from '@angular/router';
-import { switchMap } from 'rxjs';
+import { catchError, forkJoin, map, of, switchMap } from 'rxjs';
 import { BookService } from '../../services/book.service';
 import { ReadingListService } from '../../services/reading-list.service';
 import { BookDetail, ReadingStatus, SubjectWork } from '../../models/book.model';
@@ -88,6 +89,8 @@ import { FormsModule } from '@angular/forms';
           </section>
         }
       </div>
+    } @else if (error) {
+      <div class="loading" role="alert">Could not load this book. Please try again or <a routerLink="/">return to search</a>.</div>
     } @else if (loading) {
       <div class="loading">Loading book details...</div>
     }
@@ -99,7 +102,7 @@ import { FormsModule } from '@angular/forms';
 
     .content-grid {
       display: grid;
-      grid-template-columns: 1fr 320px;
+      grid-template-columns: minmax(0, 1fr) 320px;
       gap: 32px;
       margin-bottom: 48px;
     }
@@ -186,6 +189,7 @@ import { FormsModule } from '@angular/forms';
 export class BookDetailComponent implements OnInit {
   book?: BookDetail;
   loading = true;
+  error = false;
   description = '';
   authors: string[] = [];
   coverId?: number;
@@ -195,6 +199,7 @@ export class BookDetailComponent implements OnInit {
   currentNotes = '';
   relatedBooks: SubjectWork[] = [];
   private workId = '';
+  private destroyRef = inject(DestroyRef);
 
   constructor(
     private route: ActivatedRoute,
@@ -207,33 +212,42 @@ export class BookDetailComponent implements OnInit {
       switchMap(params => {
         this.workId = params.get('workId') || '';
         this.loading = true;
-        return this.bookService.getBookDetail(this.workId);
-      })
-    ).subscribe(book => {
-      this.book = book;
+        this.error = false;
+        this.book = undefined;
+        this.relatedBooks = [];
+        this.currentStatus = '';
+        this.currentRating = 0;
+        this.currentNotes = '';
+        return this.bookService.getBookDetail(this.workId).pipe(
+          switchMap(book => forkJoin({
+            book: of(book),
+            metadata: this.bookService.search(`key:${book.key}`, 1).pipe(
+              map(result => result.docs[0]), catchError(() => of(undefined))
+            ),
+            related: book.subjects?.length
+              ? this.bookService.getSubjectBooks(book.subjects[0].toLowerCase().replace(/\s+/g, '_')).pipe(
+                  map(result => result.works || []), catchError(() => of([] as SubjectWork[]))
+                )
+              : of([] as SubjectWork[]),
+          })),
+          catchError(() => { this.error = true; return of(null); })
+        );
+      }),
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe(result => {
       this.loading = false;
+      if (!result) return;
+      const { book, metadata, related } = result;
+      this.book = book;
       this.description = this.bookService.extractDescription(book.description);
-      this.coverId = book.covers?.[0];
-      this.authors = [];
-      this.year = undefined;
-
+      this.coverId = book.covers?.find(id => id > 0) || metadata?.cover_i;
       const entry = this.readingListService.getEntry(this.workId);
-      if (entry) {
-        this.currentStatus = entry.status;
-        this.currentRating = entry.rating;
-        this.currentNotes = entry.notes;
-        this.authors = entry.authors;
-        this.year = entry.year;
-      }
-
-      if (book.subjects?.length) {
-        const subject = book.subjects[0].toLowerCase().replace(/\s+/g, '_');
-        this.bookService.getSubjectBooks(subject).subscribe(res => {
-          this.relatedBooks = (res.works || [])
-            .filter(w => this.bookService.extractWorkId(w.key) !== this.workId)
-            .slice(0, 6);
-        });
-      }
+      this.authors = metadata?.author_name || entry?.authors || [];
+      this.year = metadata?.first_publish_year || entry?.year;
+      this.currentStatus = entry?.status || '';
+      this.currentRating = entry?.rating || 0;
+      this.currentNotes = entry?.notes || '';
+      this.relatedBooks = related.filter(w => this.bookService.extractWorkId(w.key) !== this.workId).slice(0, 6);
     });
   }
 

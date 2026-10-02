@@ -1,6 +1,7 @@
 @import url('https://fonts.googleapis.com/css2?family=Merriweather:wght@400;700&family=Inter:wght@400;500;600&display=swap');
 
 :root {
+  color-scheme: light;
   --bg: #faf7f2;
   --bg-card: #fff;
   --text: #1a1a2e;
@@ -15,9 +16,10 @@
 }
 
 [data-theme="dark"] {
+  color-scheme: dark;
   --bg: #1a1a2e;
   --bg-card: #2d2d44;
-  --text: #3d3d55;
+  --text: #f1f1f7;
   --text-muted: #a0a0b8;
   --border: #3d3d55;
   --shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
