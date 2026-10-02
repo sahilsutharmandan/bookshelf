@@ -1,4 +1,4 @@
-import { Component, Input } from '@angular/core';
+import { Component, Input, OnInit, OnChanges } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { BookService } from '../../services/book.service';
 
@@ -9,7 +9,11 @@ import { BookService } from '../../services/book.service';
   template: `
     <a [routerLink]="['/book', workId]" class="card">
       <div class="cover">
-        <img [src]="coverUrl" [alt]="title" loading="lazy" />
+        @if (coverUrl && !imageError) {
+          <img [src]="coverUrl" [alt]="title" loading="lazy" (error)="onImageError()" />
+        } @else {
+          <div class="placeholder">📚</div>
+        }
       </div>
       <div class="info">
         <h3 class="title">{{ title }}</h3>
@@ -103,7 +107,7 @@ import { BookService } from '../../services/book.service';
     }
   `],
 })
-export class BookCardComponent {
+export class BookCardComponent implements OnInit, OnChanges {
   @Input({ required: true }) title = '';
   @Input() authorList: string[] = [];
   @Input() coverId?: number;
@@ -112,14 +116,28 @@ export class BookCardComponent {
   @Input({ required: true }) workId = '';
 
   coverUrl = '';
+  imageError = false;
 
   get authors(): string {
-    return this.authorList.join(',');
+    return this.authorList.join(', ');
   }
 
   constructor(private bookService: BookService) {}
 
   ngOnInit(): void {
+    this.updateCover();
+  }
+
+  ngOnChanges(): void {
+    this.updateCover();
+  }
+
+  onImageError(): void {
+    this.imageError = true;
+  }
+
+  private updateCover(): void {
+    this.imageError = false;
     this.coverUrl = this.bookService.getCoverUrl(this.coverId);
   }
 }

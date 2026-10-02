@@ -1,6 +1,6 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { Subject, Subscription, debounceTime, distinctUntilChanged, mergeMap, of } from 'rxjs';
+import { Subject, Subscription, debounceTime, distinctUntilChanged, switchMap, of } from 'rxjs';
 import { BookService } from '../../services/book.service';
 import { BookCardComponent } from '../../components/book-card/book-card.component';
 import { BookSearchResult } from '../../models/book.model';
@@ -224,7 +224,7 @@ export class SearchComponent implements OnInit, OnDestroy {
     this.sub = this.searchSubject.pipe(
       debounceTime(350),
       distinctUntilChanged(),
-      mergeMap(q => {
+      switchMap(q => {
         if (!q.trim()) {
           this.searched = false;
           return of(null);
@@ -233,12 +233,19 @@ export class SearchComponent implements OnInit, OnDestroy {
         this.searched = true;
         return this.bookService.search(q, this.pageSize, this.offset);
       })
-    ).subscribe(res => {
-      this.loading = false;
-      if (res) {
-        this.results = res.docs;
-        this.totalResults = res.numFound;
-      } else {
+    ).subscribe({
+      next: (res) => {
+        this.loading = false;
+        if (res) {
+          this.results = res.docs;
+          this.totalResults = res.numFound;
+        } else {
+          this.results = [];
+          this.totalResults = 0;
+        }
+      },
+      error: () => {
+        this.loading = false;
         this.results = [];
         this.totalResults = 0;
       }
@@ -256,28 +263,40 @@ export class SearchComponent implements OnInit, OnDestroy {
   }
 
   browseSubject(subject: string): void {
+    const isSameSubject = this.activeSubject === subject && this.query === subject;
     this.activeSubject = subject;
     this.query = subject;
     this.offset = 0;
-    this.searchSubject.next(subject);
+    if (isSameSubject) {
+      this.doSearch();
+    } else {
+      this.searchSubject.next(subject);
+    }
   }
 
   prevPage(): void {
     this.offset = Math.max(0, this.offset - this.pageSize);
     this.doSearch();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
   nextPage(): void {
     this.offset += this.pageSize;
     this.doSearch();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
   private doSearch(): void {
     this.loading = true;
-    this.bookService.search(this.query, this.pageSize, this.offset).subscribe(res => {
-      this.loading = false;
-      this.results = res.docs;
-      this.totalResults = res.numFound;
+    this.bookService.search(this.query, this.pageSize, this.offset).subscribe({
+      next: (res) => {
+        this.loading = false;
+        this.results = res.docs;
+        this.totalResults = res.numFound;
+      },
+      error: () => {
+        this.loading = false;
+      }
     });
   }
 
