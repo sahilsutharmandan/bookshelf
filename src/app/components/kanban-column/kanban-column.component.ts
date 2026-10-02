@@ -48,8 +48,12 @@ import { StarRatingComponent } from '../star-rating/star-rating.component';
     </div>
   `,
   styles: [`
+    :host {
+      display: block;
+      min-width: 0;
+    }
+
     .column {
-      flex: 1;
       min-width: 0;
     }
 

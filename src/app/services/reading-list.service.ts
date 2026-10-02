@@ -52,6 +52,20 @@ export class ReadingListService {
     }
   }
 
+  moveEntry(workId: string, status: ReadingStatus, index: number): void {
+    const entry = this.getEntry(workId);
+    if (!entry) return;
+
+    const remaining = this.entriesSubject.value.filter(e => e.workId !== workId);
+    const destination = remaining.filter(e => e.status === status);
+    const position = Math.max(0, Math.min(index, destination.length));
+    destination.splice(position, 0, { ...entry, status });
+    this.saveEntries([
+      ...remaining.filter(e => e.status !== status),
+      ...destination,
+    ]);
+  }
+
   updateRating(workId: string, rating: number): void {
     const entries = [...this.entriesSubject.value];
     const idx = entries.findIndex(e => e.workId === workId);

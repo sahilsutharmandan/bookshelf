@@ -1,5 +1,5 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
-import { CdkDragDrop, moveItemInArray, transferArrayItem } from '@angular/cdk/drag-drop';
+import { CdkDragDrop } from '@angular/cdk/drag-drop';
 import { Subscription } from 'rxjs';
 import { ReadingListEntry, ReadingStatus } from '../../models/book.model';
 import { ReadingListService } from '../../services/reading-list.service';
@@ -42,13 +42,14 @@ import { KanbanColumnComponent } from '../kanban-column/kanban-column.component'
   `,
   styles: [`
     .board {
-      display: flex;
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
       gap: 24px;
     }
 
-    @media (max-width: 320px) {
+    @media (max-width: 767px) {
       .board {
-        flex-direction: column;
+        grid-template-columns: minmax(0, 1fr);
       }
     }
   `],
@@ -74,18 +75,11 @@ export class KanbanBoardComponent implements OnInit, OnDestroy {
   }
 
   onDrop(event: CdkDragDrop<ReadingListEntry[]>): void {
-    if (event.previousContainer === event.container) {
-      moveItemInArray(event.container.data, event.previousIndex, event.currentIndex);
-    } else {
-      const entry = event.container.data[event.currentIndex];
-      const newStatus = event.container.id as ReadingStatus;
-      if (entry) {
-        this.readingListService.updateStatus(entry.workId, newStatus);
-      }
-      transferArrayItem(
-        event.previousContainer.data,
-        event.container.data,
-        event.previousIndex,
+    const entry = event.previousContainer.data[event.previousIndex];
+    if (entry) {
+      this.readingListService.moveEntry(
+        entry.workId,
+        event.container.id as ReadingStatus,
         event.currentIndex
       );
     }

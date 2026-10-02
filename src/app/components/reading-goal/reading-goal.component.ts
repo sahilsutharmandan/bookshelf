@@ -84,7 +84,7 @@ export class ReadingGoalComponent {
 
   get dashOffset(): number {
     if (this.target <= 0) return this.circumference;
-    const progress = this.current / this.target;
+    const progress = Math.max(0, Math.min(1, this.current / this.target));
     return this.circumference * (1 - progress);
   }
 }
