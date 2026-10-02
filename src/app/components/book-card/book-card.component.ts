@@ -9,7 +9,13 @@ import { BookService } from '../../services/book.service';
   template: `
     <a [routerLink]="['/book', workId]" class="card">
       <div class="cover">
-        <img [src]="coverUrl" [alt]="title" loading="lazy" />
+        @if (coverUrl && !coverFailed) {
+          <img [src]="coverUrl" [alt]="title" loading="lazy" (error)="coverFailed = true" />
+        } @else {
+          <div class="placeholder" role="img" [attr.aria-label]="'Cover unavailable for ' + title">
+            <span>Cover unavailable</span>
+          </div>
+        }
       </div>
       <div class="info">
         <h3 class="title">{{ title }}</h3>
@@ -63,7 +69,10 @@ import { BookService } from '../../services/book.service';
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 2.5rem;
+      font-size: 0.9rem;
+      color: var(--text);
+      text-align: center;
+      padding: 16px;
       background: var(--primary-light);
     }
 
@@ -112,6 +121,7 @@ export class BookCardComponent {
   @Input({ required: true }) workId = '';
 
   coverUrl = '';
+  coverFailed = false;
 
   get authors(): string {
     return this.authorList.join(',');
@@ -119,7 +129,8 @@ export class BookCardComponent {
 
   constructor(private bookService: BookService) {}
 
-  ngOnInit(): void {
-    this.coverUrl = this.bookService.getCoverUrl(this.coverId);
+  ngOnChanges(): void {
+    this.coverFailed = false;
+    this.coverUrl = this.bookService.getCoverUrl(this.coverId) + (this.coverId ? '?default=false' : '');
   }
 }

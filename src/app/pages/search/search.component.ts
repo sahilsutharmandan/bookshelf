@@ -1,6 +1,6 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { Subject, Subscription, debounceTime, distinctUntilChanged, mergeMap, of } from 'rxjs';
+import { Subject, Subscription, catchError, switchMap, of, timer, map } from 'rxjs';
 import { BookService } from '../../services/book.service';
 import { BookCardComponent } from '../../components/book-card/book-card.component';
 import { BookSearchResult } from '../../models/book.model';
@@ -38,7 +38,7 @@ import { BookSearchResult } from '../../models/book.model';
         <div class="loading">Searching...</div>
       }
 
-      @if (results.length > 0) {
+      @if (!loading && results.length > 0) {
         <div class="results-grid">
           @for (book of results; track book.key) {
             <app-book-card
@@ -63,7 +63,11 @@ import { BookSearchResult } from '../../models/book.model';
         </div>
       }
 
-      @if (!loading && searched && results.length === 0) {
+      @if (error) {
+        <div class="empty" role="alert">{{ error }} <button class="page-btn" (click)="doSearch()">Retry</button></div>
+      }
+
+      @if (!loading && !error && searched && results.length === 0) {
         <div class="empty">No books found. Try a different search term.</div>
       }
     </section>
@@ -212,36 +216,34 @@ export class SearchComponent implements OnInit, OnDestroy {
   loading = false;
   searched = false;
   activeSubject = '';
+  error = '';
 
   subjects = ['fiction', 'science', 'history', 'biography', 'fantasy', 'mystery'];
 
-  private searchSubject = new Subject<string>();
+  private searchSubject = new Subject<{ query: string; offset: number; delay: number }>();
   private sub?: Subscription;
 
   constructor(private bookService: BookService) {}
 
   ngOnInit(): void {
     this.sub = this.searchSubject.pipe(
-      debounceTime(350),
-      distinctUntilChanged(),
-      mergeMap(q => {
-        if (!q.trim()) {
-          this.searched = false;
-          return of(null);
-        }
-        this.loading = true;
-        this.searched = true;
-        return this.bookService.search(q, this.pageSize, this.offset);
+      switchMap(({ query, offset, delay }) => {
+        this.error = '';
+        this.searched = !!query.trim();
+        this.loading = this.searched;
+        if (!this.searched) return of({ response: null, offset, error: '' });
+        return timer(delay).pipe(
+          switchMap(() => this.bookService.search(query.trim(), this.pageSize, offset)),
+          map(response => ({ response, offset, error: '' })),
+          catchError(() => of({ response: null, offset, error: 'Unable to load books. Please try again.' }))
+        );
       })
-    ).subscribe(res => {
+    ).subscribe(({ response, offset, error }) => {
       this.loading = false;
-      if (res) {
-        this.results = res.docs;
-        this.totalResults = res.numFound;
-      } else {
-        this.results = [];
-        this.totalResults = 0;
-      }
+      this.error = error;
+      this.offset = offset;
+      this.results = response?.docs || [];
+      this.totalResults = response?.numFound || 0;
     });
   }
 
@@ -252,33 +254,30 @@ export class SearchComponent implements OnInit, OnDestroy {
   onQueryChange(value: string): void {
     this.offset = 0;
     this.activeSubject = '';
-    this.searchSubject.next(value);
+    this.searchSubject.next({ query: value, offset: 0, delay: 350 });
   }
 
   browseSubject(subject: string): void {
     this.activeSubject = subject;
     this.query = subject;
     this.offset = 0;
-    this.searchSubject.next(subject);
+    this.doSearch();
   }
 
   prevPage(): void {
+    if (this.loading || this.offset === 0) return;
     this.offset = Math.max(0, this.offset - this.pageSize);
     this.doSearch();
   }
 
   nextPage(): void {
+    if (this.loading || this.offset + this.pageSize >= this.totalResults) return;
     this.offset += this.pageSize;
     this.doSearch();
   }
 
-  private doSearch(): void {
-    this.loading = true;
-    this.bookService.search(this.query, this.pageSize, this.offset).subscribe(res => {
-      this.loading = false;
-      this.results = res.docs;
-      this.totalResults = res.numFound;
-    });
+  doSearch(): void {
+    this.searchSubject.next({ query: this.query, offset: this.offset, delay: 0 });
   }
 
   extractWorkId(key: string): string {
