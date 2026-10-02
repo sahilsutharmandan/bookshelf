@@ -20,6 +20,10 @@ export class ReadingListService {
     this.entriesSubject.next(entries);
   }
 
+  saveAll(entries: ReadingListEntry[]): void {
+    this.saveEntries(entries);
+  }
+
   getEntry(workId: string): ReadingListEntry | undefined {
     return this.entriesSubject.value.find(e => e.workId === workId);
   }
@@ -95,7 +99,7 @@ export class ReadingListService {
   getFinishedThisYear(): number {
     const year = new Date().getFullYear();
     return this.entriesSubject.value.filter(
-      e => e.status === 'finished' && new Date(e.dateAdded).getFullYear() === year
+      e => e.status === 'finished' && (!e.dateAdded || new Date(e.dateAdded).getFullYear() === year)
     ).length;
   }
 

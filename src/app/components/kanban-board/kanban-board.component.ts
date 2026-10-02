@@ -46,7 +46,7 @@ import { KanbanColumnComponent } from '../kanban-column/kanban-column.component'
       gap: 24px;
     }
 
-    @media (max-width: 320px) {
+    @media (max-width: 768px) {
       .board {
         flex-direction: column;
       }
@@ -77,18 +77,28 @@ export class KanbanBoardComponent implements OnInit, OnDestroy {
     if (event.previousContainer === event.container) {
       moveItemInArray(event.container.data, event.previousIndex, event.currentIndex);
     } else {
-      const entry = event.container.data[event.currentIndex];
+      const entry = event.previousContainer.data[event.previousIndex];
       const newStatus = event.container.id as ReadingStatus;
-      if (entry) {
-        this.readingListService.updateStatus(entry.workId, newStatus);
-      }
       transferArrayItem(
         event.previousContainer.data,
         event.container.data,
         event.previousIndex,
         event.currentIndex
       );
+      if (entry) {
+        entry.status = newStatus;
+      }
     }
+    this.persistBoard();
+  }
+
+  private persistBoard(): void {
+    const allEntries = [
+      ...this.wantItems,
+      ...this.readingItems,
+      ...this.finishedItems,
+    ];
+    this.readingListService.saveAll(allEntries);
   }
 
   onRemove(workId: string): void {

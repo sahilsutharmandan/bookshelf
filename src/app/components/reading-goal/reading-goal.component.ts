@@ -20,6 +20,7 @@ import { Component, Input } from '@angular/core';
           stroke-linecap="round"
           [attr.stroke-dasharray]="circumference"
           [attr.stroke-dashoffset]="dashOffset"
+          [style.opacity]="current > 0 ? 1 : 0"
           class="progress-ring"
         />
       </svg>
@@ -83,8 +84,8 @@ export class ReadingGoalComponent {
   readonly circumference = 2 * Math.PI * 52;
 
   get dashOffset(): number {
-    if (this.target <= 0) return this.circumference;
-    const progress = this.current / this.target;
+    if (!this.target || this.target <= 0) return this.circumference;
+    const progress = Math.min(1, Math.max(0, this.current / this.target));
     return this.circumference * (1 - progress);
   }
 }
