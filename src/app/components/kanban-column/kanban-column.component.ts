@@ -32,7 +32,7 @@ import { StarRatingComponent } from '../star-rating/star-rating.component';
               </div>
               <div class="card-info">
                 <p class="card-title">{{ entry.title }}</p>
-                <p class="card-author">{{ entry.authors.join(',') }}</p>
+                <p class="card-author">{{ entry.authors.join(', ') }}</p>
               </div>
             </a>
             <div class="card-footer">

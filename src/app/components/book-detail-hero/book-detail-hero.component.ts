@@ -137,10 +137,10 @@ export class BookDetailHeroComponent {
   constructor(private bookService: BookService) {}
 
   ngOnInit(): void {
-    this.coverUrl = this.bookService.getCoverUrl(this.coverId, 'S');
+    this.coverUrl = this.bookService.getCoverUrl(this.coverId, 'L');
   }
 
   ngOnChanges(): void {
-    this.coverUrl = this.bookService.getCoverUrl(this.coverId, 'S');
+    this.coverUrl = this.bookService.getCoverUrl(this.coverId, 'L');
   }
 }

@@ -42,11 +42,19 @@ export class BookService {
     return `${this.coversUrl}/${coverId}-${size}.jpg`;
   }
 
-  extractDescription(desc: string | { type: string; value: string } | undefined): string {
+  getAuthor(authorKey: string): Observable<{ name: string }> {
+    const cleanKey = authorKey.startsWith('/') ? authorKey : `/authors/${authorKey}`;
+    return this.http.get<{ name: string }>(`${this.baseUrl}${cleanKey}.json`);
+  }
+
+  extractDescription(desc: string | { type?: string; value?: string } | undefined): string {
     if (!desc) {
       return '';
     }
-    return desc as string;
+    if (typeof desc === 'object' && desc !== null && 'value' in desc) {
+      return desc.value || '';
+    }
+    return typeof desc === 'string' ? desc : '';
   }
 
   extractWorkId(key: string): string {

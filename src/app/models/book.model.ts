@@ -20,6 +20,12 @@ export interface BookDetail {
   covers?: number[];
   subjects?: string[];
   key: string;
+  first_publish_date?: string;
+  authors?: Array<{
+    author?: { key: string };
+    key?: string;
+    type?: { key: string };
+  }>;
 }
 
 export interface ReadingListEntry {

@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
-import { switchMap } from 'rxjs';
+import { switchMap, forkJoin, of, catchError, map } from 'rxjs';
 import { BookService } from '../../services/book.service';
 import { ReadingListService } from '../../services/reading-list.service';
 import { BookDetail, ReadingStatus, SubjectWork } from '../../models/book.model';
@@ -217,13 +217,67 @@ export class BookDetailComponent implements OnInit {
       this.authors = [];
       this.year = undefined;
 
+      const navState = history.state;
+      if (navState?.authors?.length) {
+        this.authors = navState.authors;
+      }
+      if (navState?.year) {
+        this.year = navState.year;
+      }
+
       const entry = this.readingListService.getEntry(this.workId);
       if (entry) {
         this.currentStatus = entry.status;
         this.currentRating = entry.rating;
         this.currentNotes = entry.notes;
-        this.authors = entry.authors;
-        this.year = entry.year;
+        if (entry.authors?.length && this.authors.length === 0) {
+          this.authors = entry.authors;
+        }
+        if (entry.year && !this.year) {
+          this.year = entry.year;
+        }
+      }
+
+      if (!this.year && book.first_publish_date) {
+        const yearMatch = book.first_publish_date.match(/\d{4}/);
+        if (yearMatch) {
+          this.year = parseInt(yearMatch[0], 10);
+        }
+      }
+
+      if (entry && (!entry.year && this.year)) {
+        this.readingListService.addOrUpdate({
+          ...entry,
+          year: this.year,
+        });
+      }
+
+      if (this.authors.length === 0 && book.authors?.length) {
+        const authorObservables = book.authors.map(a => {
+          const key = a.author?.key || a.key;
+          if (key) {
+            return this.bookService.getAuthor(key).pipe(
+              map(res => res.name),
+              catchError(() => of(''))
+            );
+          }
+          return of('');
+        });
+
+        forkJoin(authorObservables).subscribe(names => {
+          const validNames = names.filter(n => !!n);
+          if (validNames.length > 0) {
+            this.authors = validNames;
+            const existingEntry = this.readingListService.getEntry(this.workId);
+            if (existingEntry) {
+              this.readingListService.addOrUpdate({
+                ...existingEntry,
+                authors: this.authors,
+                year: this.year ?? existingEntry.year,
+              });
+            }
+          }
+        });
       }
 
       if (book.subjects?.length) {

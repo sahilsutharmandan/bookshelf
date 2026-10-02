@@ -1,4 +1,4 @@
-import { Component, Input } from '@angular/core';
+import { Component, Input, OnInit, OnChanges } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { BookService } from '../../services/book.service';
 
@@ -7,7 +7,7 @@ import { BookService } from '../../services/book.service';
   standalone: true,
   imports: [RouterLink],
   template: `
-    <a [routerLink]="['/book', workId]" class="card">
+    <a [routerLink]="['/book', workId]" [state]="{ authors: authorList, year: year }" class="card">
       <div class="cover">
         <img [src]="coverUrl" [alt]="title" loading="lazy" />
       </div>
@@ -103,7 +103,7 @@ import { BookService } from '../../services/book.service';
     }
   `],
 })
-export class BookCardComponent {
+export class BookCardComponent implements OnInit, OnChanges {
   @Input({ required: true }) title = '';
   @Input() authorList: string[] = [];
   @Input() coverId?: number;
@@ -114,12 +114,16 @@ export class BookCardComponent {
   coverUrl = '';
 
   get authors(): string {
-    return this.authorList.join(',');
+    return this.authorList.join(', ');
   }
 
   constructor(private bookService: BookService) {}
 
   ngOnInit(): void {
+    this.coverUrl = this.bookService.getCoverUrl(this.coverId);
+  }
+
+  ngOnChanges(): void {
     this.coverUrl = this.bookService.getCoverUrl(this.coverId);
   }
 }
