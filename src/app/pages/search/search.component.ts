@@ -209,6 +209,7 @@ import { formatCompact } from '../../utils/format';
     @media (max-width: 600px) {
       .subject-chips {
         flex-wrap: nowrap;
+        justify-content: flex-start;
         overflow-x: auto;
         scrollbar-width: none;
         margin: 0 -16px 24px;

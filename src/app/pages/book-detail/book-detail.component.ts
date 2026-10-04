@@ -1,4 +1,4 @@
-import { Component, ElementRef, OnInit, ViewChild } from '@angular/core';
+import { afterNextRender, ChangeDetectorRef, Component, ElementRef, Injector, NgZone, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { switchMap } from 'rxjs';
 import { BookService } from '../../services/book.service';
@@ -216,7 +216,7 @@ import { formatDate } from '../../utils/format';
     }
   `],
 })
-export class BookDetailComponent implements OnInit {
+export class BookDetailComponent implements OnInit, OnDestroy {
   book?: BookDetail;
   loading = true;
   description = '';
@@ -232,10 +232,36 @@ export class BookDetailComponent implements OnInit {
   addedOn = '';
   private workId = '';
 
-  @ViewChild('descText') private descText?: ElementRef<HTMLElement>;
+  private descText?: ElementRef<HTMLElement>;
+  private descriptionObserver?: ResizeObserver;
+
+  @ViewChild('descText') set descriptionElement(element: ElementRef<HTMLElement> | undefined) {
+    this.descriptionObserver?.disconnect();
+    this.descText = element;
+    if (element) {
+      this.descriptionObserver = new ResizeObserver(() => this.updateDescriptionClipping());
+      this.descriptionObserver.observe(element.nativeElement);
+    }
+  }
+
+  ngOnDestroy(): void {
+    this.descriptionObserver?.disconnect();
+  }
+
+  private updateDescriptionClipping(): void {
+    if (!this.expanded) {
+      this.zone.run(() => {
+        this.canExpand = this.isDescriptionClipped();
+        this.changeDetector.detectChanges();
+      });
+    }
+  }
 
   constructor(
     private route: ActivatedRoute,
+    private injector: Injector,
+    private zone: NgZone,
+    private changeDetector: ChangeDetectorRef,
     private bookService: BookService,
     private readingListService: ReadingListService,
   ) {}
@@ -252,7 +278,8 @@ export class BookDetailComponent implements OnInit {
       this.loading = false;
       this.description = this.bookService.extractDescription(book.description);
       this.expanded = false;
-      this.canExpand = this.isDescriptionClipped();
+      this.canExpand = false;
+      afterNextRender(() => this.updateDescriptionClipping(), { injector: this.injector });
       this.coverId = book.covers?.[0];
       this.authors = [];
       this.year = undefined;

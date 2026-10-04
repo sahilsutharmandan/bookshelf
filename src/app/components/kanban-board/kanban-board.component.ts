@@ -11,7 +11,7 @@ type SortOption = 'newest' | 'oldest' | 'title' | 'rating';
 type EntryComparator = (a: ReadingListEntry, b: ReadingListEntry) => number;
 
 const byDateAdded: EntryComparator = (a, b) =>
-  new Date(a.dateAdded).getDate() - new Date(b.dateAdded).getDate();
+  new Date(a.dateAdded).getTime() - new Date(b.dateAdded).getTime();
 
 const SORTERS: Record<SortOption, EntryComparator> = {
   newest: (a, b) => byDateAdded(b, a),
