@@ -1,5 +1,6 @@
 import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { CdkDropList, CdkDrag } from '@angular/cdk/drag-drop';
+import { DatePipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { ReadingListEntry } from '../../models/book.model';
 import { BookService } from '../../services/book.service';
@@ -8,7 +9,7 @@ import { StarRatingComponent } from '../star-rating/star-rating.component';
 @Component({
   selector: 'app-kanban-column',
   standalone: true,
-  imports: [CdkDropList, CdkDrag, RouterLink, StarRatingComponent],
+  imports: [CdkDropList, CdkDrag, RouterLink, StarRatingComponent, DatePipe],
   template: `
     <div class="column">
       <h3 class="column-title">{{ title }} <span class="count">({{ items.length }})</span></h3>
@@ -33,6 +34,7 @@ import { StarRatingComponent } from '../star-rating/star-rating.component';
               <div class="card-info">
                 <p class="card-title">{{ entry.title }}</p>
                 <p class="card-author">{{ entry.authors.join(', ') || 'Unknown author' }}</p>
+                <p class="card-added">Added {{ entry.dateAdded | date: 'MMM d' }}</p>
               </div>
             </a>
             <div class="card-footer">
@@ -48,6 +50,12 @@ import { StarRatingComponent } from '../star-rating/star-rating.component';
     </div>
   `,
   styles: [`
+    :host {
+      display: block;
+      flex: 1;
+      min-width: 0;
+    }
+
     .column {
       flex: 1;
       min-width: 0;
@@ -144,6 +152,12 @@ import { StarRatingComponent } from '../star-rating/star-rating.component';
       -webkit-line-clamp: 1;
       -webkit-box-orient: vertical;
       overflow: hidden;
+    }
+
+    .card-added {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      margin-top: 4px;
     }
 
     .card-footer {
