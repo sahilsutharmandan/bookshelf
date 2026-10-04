@@ -9,7 +9,14 @@ import { RouterLink, RouterLinkActive } from '@angular/router';
     <header class="header">
       <div class="header-inner container">
         <a routerLink="/" class="logo">BookShelf</a>
-        <nav class="nav">
+        <button
+          class="menu-toggle"
+          (click)="menuOpen = !menuOpen"
+          [attr.aria-expanded]="menuOpen"
+          aria-controls="main-nav"
+          aria-label="Menu"
+        >{{ menuOpen ? '✕' : '☰' }}</button>
+        <nav class="nav" id="main-nav" [class.open]="menuOpen">
           <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">Search</a>
           <a routerLink="/reading-list" routerLinkActive="active">My List</a>
           <a routerLink="/stats" routerLinkActive="active">Stats</a>
@@ -31,10 +38,12 @@ import { RouterLink, RouterLinkActive } from '@angular/router';
     }
 
     .header-inner {
+      position: relative;
       display: flex;
       align-items: center;
       height: 64px;
       gap: 24px;
+      overflow: hidden;
     }
 
     .logo {
@@ -69,6 +78,21 @@ import { RouterLink, RouterLinkActive } from '@angular/router';
       }
     }
 
+    .menu-toggle {
+      display: none;
+      margin-left: auto;
+      background: none;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      width: 36px;
+      height: 36px;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.1rem;
+      color: var(--text);
+      flex-shrink: 0;
+    }
+
     .theme-toggle {
       background: none;
       border: 1px solid var(--border);
@@ -87,19 +111,42 @@ import { RouterLink, RouterLinkActive } from '@angular/router';
       }
     }
 
-    @media (max-width: 480px) {
-      .nav a {
-        font-size: 0.9rem;
-        padding: 4px;
-      }
+    @media (max-width: 600px) {
       .header-inner {
         gap: 12px;
+      }
+
+      .menu-toggle {
+        display: flex;
+      }
+
+      .nav {
+        display: none;
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        flex-direction: column;
+        gap: 4px;
+        padding: 8px 16px 12px;
+        background: var(--bg-card);
+        border-bottom: 1px solid var(--border);
+        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.08);
+
+        &.open {
+          display: flex;
+        }
+
+        a {
+          padding: 10px 8px;
+        }
       }
     }
   `],
 })
 export class HeaderComponent {
   isDark = false;
+  menuOpen = false;
 
   constructor() {
     const saved = localStorage.getItem('bookshelf_theme');
