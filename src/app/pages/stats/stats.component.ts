@@ -79,11 +79,18 @@ import { ReadingGoalComponent } from '../../components/reading-goal/reading-goal
 
     .goal-card {
       grid-column: 1 / -1;
+      background: linear-gradient(135deg, #fff7ed 0%, #ffffff 65%);
+      border-color: #fed7aa;
 
       h2 {
         font-size: 1.2rem;
         margin-bottom: 8px;
       }
+    }
+
+    [data-theme='dark'] .goal-card {
+      background: var(--bg-card);
+      border-color: var(--border);
     }
 
     .goal-input {
@@ -154,14 +161,21 @@ export class StatsComponent implements OnInit, OnDestroy {
     const goal = this.readingListService.getGoal();
     this.goalTarget = goal.target;
     this.sub = this.readingListService.entries$.subscribe(entries => {
+      const finished = entries.filter(e => e.status === 'finished');
       this.totalBooks = entries.length;
-      this.finishedThisYear = this.readingListService.getFinishedThisYear();
-      this.averageRating = this.readingListService.getAverageRating();
+      this.finishedThisYear = finished.filter(e => new Date(e.dateAdded).getFullYear() === this.currentYear).length;
+      this.averageRating = this.average(finished.map(e => e.rating));
     });
   }
 
   ngOnDestroy(): void {
     this.sub?.unsubscribe();
+  }
+
+  private average(values: number[]): number {
+    if (values.length === 0) return 0;
+    const sum = values.reduce((acc, v) => acc + v, 0);
+    return Math.round((sum / values.length) * 10) / 10;
   }
 
   onGoalChange(value: number): void {

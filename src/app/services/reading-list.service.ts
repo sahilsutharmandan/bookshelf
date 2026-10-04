@@ -91,20 +91,4 @@ export class ReadingListService {
     const goal: ReadingGoal = { year: new Date().getFullYear(), target };
     localStorage.setItem(this.goalKey, JSON.stringify(goal));
   }
-
-  getFinishedThisYear(): number {
-    const year = new Date().getFullYear();
-    return this.entriesSubject.value.filter(
-      e => e.status === 'finished' && new Date(e.dateAdded).getFullYear() === year
-    ).length;
-  }
-
-  getAverageRating(): number {
-    const finished = this.entriesSubject.value.filter(
-      e => e.status === 'finished' && e.rating > 0
-    );
-    if (finished.length === 0) return 0;
-    const sum = finished.reduce((acc, e) => acc + e.rating, 0);
-    return Math.round((sum / finished.length) * 10) / 10;
-  }
 }
