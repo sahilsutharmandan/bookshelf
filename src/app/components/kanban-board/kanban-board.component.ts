@@ -25,7 +25,7 @@ const SORTERS: Record<SortOption, EntryComparator> = {
   standalone: true,
   imports: [KanbanColumnComponent, FormsModule, RouterLink],
   template: `
-    @if (activeCount === 0) {
+    @if (activeCount + finishedItems.length === 0) {
       <div class="empty-state">
         <p>Your reading list is empty.</p>
         <a routerLink="/">Find something to read</a>

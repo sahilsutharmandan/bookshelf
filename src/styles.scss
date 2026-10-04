@@ -68,7 +68,9 @@ button {
   }
 
   &:focus-visible {
-    box-shadow: var(--focus-ring);
+    outline: 2px solid var(--primary);
+    outline-offset: 3px;
+    box-shadow: var(--ring);
   }
 }
 
