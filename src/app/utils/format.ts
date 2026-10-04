@@ -1,11 +1,12 @@
 const COMPACT_UNITS = [
-  { value: 1_000, suffix: 'K' },
-  { value: 1_000_000, suffix: 'M' },
   { value: 1_000_000_000, suffix: 'B' },
+  { value: 1_000_000, suffix: 'M' },
+  { value: 1_000, suffix: 'K' },
 ];
 
 export function formatCompact(n: number): string {
-  const unit = COMPACT_UNITS.find(u => n >= u.value);
+  const abs = Math.abs(n);
+  const unit = COMPACT_UNITS.find(u => abs >= u.value);
   if (!unit) {
     return n.toString();
   }
@@ -17,5 +18,5 @@ const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', '
 
 export function formatDate(iso: string): string {
   const [year, month, day] = iso.slice(0, 10).split('-').map(Number);
-  return `${MONTHS[month]} ${day}, ${year}`;
+  return `${MONTHS[month - 1]} ${day}, ${year}`;
 }

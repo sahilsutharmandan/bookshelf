@@ -43,7 +43,6 @@ import { RouterLink, RouterLinkActive } from '@angular/router';
       align-items: center;
       height: 64px;
       gap: 24px;
-      overflow: hidden;
     }
 
     .logo {
@@ -53,6 +52,8 @@ import { RouterLink, RouterLinkActive } from '@angular/router';
       color: var(--primary);
       text-decoration: none;
       white-space: nowrap;
+      border-radius: 4px;
+      padding: 2px 4px;
     }
 
     .nav {

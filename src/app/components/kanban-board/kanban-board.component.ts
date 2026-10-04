@@ -25,7 +25,7 @@ const SORTERS: Record<SortOption, EntryComparator> = {
   standalone: true,
   imports: [KanbanColumnComponent, FormsModule, RouterLink],
   template: `
-    @if (activeCount === 0) {
+    @if (totalCount === 0) {
       <div class="empty-state">
         <p>Your reading list is empty.</p>
         <a routerLink="/">Find something to read</a>
@@ -142,6 +142,7 @@ export class KanbanBoardComponent implements OnInit, OnDestroy {
   readingItems: ReadingListEntry[] = [];
   finishedItems: ReadingListEntry[] = [];
   activeCount = 0;
+  totalCount = 0;
   sortBy: SortOption = 'newest';
   private sub?: Subscription;
 
@@ -156,6 +157,7 @@ export class KanbanBoardComponent implements OnInit, OnDestroy {
     this.readingItems = this.sorted('reading');
     this.finishedItems = this.sorted('finished');
     this.activeCount = this.wantItems.length + this.readingItems.length;
+    this.totalCount = this.activeCount + this.finishedItems.length;
   }
 
   private sorted(status: ReadingStatus): ReadingListEntry[] {
