@@ -1,9 +1,10 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { Subject, Subscription, debounceTime, distinctUntilChanged, switchMap, of } from 'rxjs';
+import { Subject, Subscription, debounceTime, distinctUntilChanged, filter, map, switchMap, tap } from 'rxjs';
 import { BookService } from '../../services/book.service';
 import { BookCardComponent } from '../../components/book-card/book-card.component';
 import { BookSearchResult } from '../../models/book.model';
+import { formatCompact } from '../../utils/format';
 
 @Component({
   selector: 'app-search',
@@ -39,6 +40,8 @@ import { BookSearchResult } from '../../models/book.model';
       }
 
       @if (results.length > 0) {
+        <p class="summary">{{ compactTotal }} books match <strong>&ldquo;{{ lastQuery }}&rdquo;</strong></p>
+
         <div class="results-grid">
           @for (book of results; track book.key) {
             <app-book-card
@@ -139,6 +142,17 @@ import { BookSearchResult } from '../../models/book.model';
       }
     }
 
+    .summary {
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      margin-bottom: 16px;
+
+      strong {
+        color: var(--text);
+        font-weight: 600;
+      }
+    }
+
     .results-grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
@@ -192,6 +206,20 @@ import { BookSearchResult } from '../../models/book.model';
       font-size: 1.1rem;
     }
 
+    @media (max-width: 600px) {
+      .subject-chips {
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        scrollbar-width: none;
+        margin: 0 -16px 24px;
+        padding: 0 16px 4px;
+      }
+
+      .chip {
+        flex-shrink: 0;
+      }
+    }
+
     @media (max-width: 480px) {
       .search-header h1 {
         font-size: 1.5rem;
@@ -212,6 +240,7 @@ export class SearchComponent implements OnInit, OnDestroy {
   loading = false;
   searched = false;
   activeSubject = '';
+  lastQuery = '';
 
   subjects = ['fiction', 'science', 'history', 'biography', 'fantasy', 'mystery'];
 
@@ -223,25 +252,21 @@ export class SearchComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.sub = this.searchSubject.pipe(
       debounceTime(350),
+      map(q => q.trim()),
       distinctUntilChanged(),
-      switchMap(q => {
-        if (!q.trim()) {
-          this.searched = false;
-          return of(null);
-        }
+      filter(q => q.length > 0),
+      tap(() => {
         this.loading = true;
         this.searched = true;
-        return this.bookService.search(q, this.pageSize, this.offset);
-      })
-    ).subscribe(res => {
+      }),
+      switchMap(q => this.bookService.search(q, this.pageSize, this.offset).pipe(
+        map(res => ({ q, res })),
+      )),
+    ).subscribe(({ q, res }) => {
       this.loading = false;
-      if (res) {
-        this.results = res.docs;
-        this.totalResults = res.numFound;
-      } else {
-        this.results = [];
-        this.totalResults = 0;
-      }
+      this.lastQuery = q;
+      this.results = res.docs;
+      this.totalResults = res.numFound;
     });
   }
 
@@ -279,6 +304,10 @@ export class SearchComponent implements OnInit, OnDestroy {
       this.results = res.docs;
       this.totalResults = res.numFound;
     });
+  }
+
+  get compactTotal(): string {
+    return formatCompact(this.totalResults);
   }
 
   extractWorkId(key: string): string {
