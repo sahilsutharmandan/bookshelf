@@ -17,9 +17,9 @@ import { RouterLink, RouterLinkActive } from '@angular/router';
           aria-label="Menu"
         >{{ menuOpen ? '✕' : '☰' }}</button>
         <nav class="nav" id="main-nav" [class.open]="menuOpen">
-          <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">Search</a>
-          <a routerLink="/reading-list" routerLinkActive="active">My List</a>
-          <a routerLink="/stats" routerLinkActive="active">Stats</a>
+          <a (click)="menuOpen = false" routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">Search</a>
+          <a (click)="menuOpen = false" routerLink="/reading-list" routerLinkActive="active">My List</a>
+          <a (click)="menuOpen = false" routerLink="/stats" routerLinkActive="active">Stats</a>
         </nav>
         <button class="theme-toggle" (click)="toggleTheme()" [attr.aria-label]="'Toggle theme'">
           {{ isDark ? '☀️' : '🌙' }}
@@ -43,7 +43,6 @@ import { RouterLink, RouterLinkActive } from '@angular/router';
       align-items: center;
       height: 64px;
       gap: 24px;
-      overflow: hidden;
     }
 
     .logo {

@@ -17,5 +17,5 @@ const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', '
 
 export function formatDate(iso: string): string {
   const [year, month, day] = iso.slice(0, 10).split('-').map(Number);
-  return `${MONTHS[month]} ${day}, ${year}`;
+  return `${MONTHS[month - 1]} ${day}, ${year}`;
 }

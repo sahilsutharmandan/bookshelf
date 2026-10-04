@@ -88,7 +88,7 @@ import { ReadingGoalComponent } from '../../components/reading-goal/reading-goal
       }
     }
 
-    [data-theme='dark'] .goal-card {
+    :host-context([data-theme='dark']) .goal-card {
       background: var(--bg-card);
       border-color: var(--border);
     }
