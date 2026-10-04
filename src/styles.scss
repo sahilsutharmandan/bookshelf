@@ -13,6 +13,8 @@
   --ring: 0 0 0 3px rgba(194, 65, 12, 0.35);
   --font-heading: 'Merriweather', Georgia, serif;
   --font-body: 'Inter', system-ui, sans-serif;
+  --bg-goal-card: linear-gradient(135deg, #fff7ed 0%, #ffffff 65%);
+  --border-goal-card: #fed7aa;
 }
 
 [data-theme="dark"] {
@@ -25,6 +27,8 @@
   --primary: #fb923c;
   --primary-light: #7c2d12;
   --ring: 0 0 0 3px rgba(251, 146, 60, 0.45);
+  --bg-goal-card: var(--bg-card);
+  --border-goal-card: var(--border);
 }
 
 *,

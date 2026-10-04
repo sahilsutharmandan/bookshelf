@@ -79,15 +79,17 @@ import { ReadingGoalComponent } from '../../components/reading-goal/reading-goal
 
     .goal-card {
       grid-column: 1 / -1;
-      background: linear-gradient(135deg, #fff7ed 0%, #ffffff 65%);
-      border-color: #fed7aa;
+      background: var(--bg-goal-card, linear-gradient(135deg, #fff7ed 0%, #ffffff 65%));
+      border-color: var(--border-goal-card, #fed7aa);
 
       h2 {
         font-size: 1.2rem;
         margin-bottom: 8px;
+        color: var(--text);
       }
     }
 
+    :host-context([data-theme='dark']) .goal-card,
     [data-theme='dark'] .goal-card {
       background: var(--bg-card);
       border-color: var(--border);

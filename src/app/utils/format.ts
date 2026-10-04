@@ -16,6 +16,8 @@ export function formatCompact(n: number): string {
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
 export function formatDate(iso: string): string {
+  if (!iso) return '';
   const [year, month, day] = iso.slice(0, 10).split('-').map(Number);
-  return `${MONTHS[month]} ${day}, ${year}`;
+  if (!year || !month || !day || month < 1 || month > 12) return '';
+  return `${MONTHS[month - 1]} ${day}, ${year}`;
 }
