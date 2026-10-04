@@ -12,3 +12,10 @@ export function formatCompact(n: number): string {
   const scaled = (n / unit.value).toFixed(1).replace(/\.0$/, '');
   return `${scaled}${unit.suffix}`;
 }
+
+const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+export function formatDate(iso: string): string {
+  const [year, month, day] = iso.slice(0, 10).split('-').map(Number);
+  return `${MONTHS[month]} ${day}, ${year}`;
+}

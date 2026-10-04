@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, ElementRef, OnInit, ViewChild } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { switchMap } from 'rxjs';
 import { BookService } from '../../services/book.service';
@@ -9,6 +9,7 @@ import { StarRatingComponent } from '../../components/star-rating/star-rating.co
 import { NotesEditorComponent } from '../../components/notes-editor/notes-editor.component';
 import { BookCardComponent } from '../../components/book-card/book-card.component';
 import { FormsModule } from '@angular/forms';
+import { formatDate } from '../../utils/format';
 
 @Component({
   selector: 'app-book-detail',
@@ -37,7 +38,12 @@ import { FormsModule } from '@angular/forms';
             @if (description) {
               <div class="description">
                 <h2>About this book</h2>
-                <p>{{ description }}</p>
+                <p #descText [class.clamped]="!expanded">{{ description }}</p>
+                @if (canExpand) {
+                  <button class="more-btn" (click)="expanded = !expanded" [attr.aria-expanded]="expanded">
+                    {{ expanded ? 'Show less' : 'Show more' }}
+                  </button>
+                }
               </div>
             }
           </div>
@@ -58,6 +64,10 @@ import { FormsModule } from '@angular/forms';
               </select>
 
               @if (currentStatus) {
+                @if (addedOn) {
+                  <p class="added-on">On your list since {{ addedOn }}</p>
+                }
+
                 <div class="rating-section">
                   <label class="label">Your rating</label>
                   <app-star-rating [rating]="currentRating" (ratingChange)="onRatingChange($event)" />
@@ -114,7 +124,30 @@ import { FormsModule } from '@angular/forms';
         color: var(--text);
         line-height: 1.8;
         white-space: pre-line;
+
+        &.clamped {
+          display: -webkit-box;
+          -webkit-line-clamp: 6;
+          -webkit-box-orient: vertical;
+          overflow: hidden;
+        }
       }
+    }
+
+    .more-btn {
+      margin-top: 8px;
+      padding: 0;
+      background: none;
+      border: none;
+      color: var(--primary);
+      font-weight: 600;
+      font-size: 0.9rem;
+    }
+
+    .added-on {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      margin-top: -6px;
     }
 
     .action-card {
@@ -194,7 +227,12 @@ export class BookDetailComponent implements OnInit {
   currentRating = 0;
   currentNotes = '';
   relatedBooks: SubjectWork[] = [];
+  expanded = false;
+  canExpand = false;
+  addedOn = '';
   private workId = '';
+
+  @ViewChild('descText') private descText?: ElementRef<HTMLElement>;
 
   constructor(
     private route: ActivatedRoute,
@@ -213,9 +251,12 @@ export class BookDetailComponent implements OnInit {
       this.book = book;
       this.loading = false;
       this.description = this.bookService.extractDescription(book.description);
+      this.expanded = false;
+      this.canExpand = this.isDescriptionClipped();
       this.coverId = book.covers?.[0];
       this.authors = [];
       this.year = undefined;
+      this.addedOn = '';
 
       const entry = this.readingListService.getEntry(this.workId);
       if (entry) {
@@ -224,6 +265,7 @@ export class BookDetailComponent implements OnInit {
         this.currentNotes = entry.notes;
         this.authors = entry.authors;
         this.year = entry.year;
+        this.addedOn = formatDate(entry.dateAdded);
       }
 
       if (book.subjects?.length) {
@@ -250,6 +292,8 @@ export class BookDetailComponent implements OnInit {
         notes: this.currentNotes,
         year: this.year,
       });
+      const entry = this.readingListService.getEntry(this.workId);
+      this.addedOn = entry ? formatDate(entry.dateAdded) : '';
     } else {
       this.readingListService.remove(this.workId);
       this.currentRating = 0;
@@ -265,6 +309,11 @@ export class BookDetailComponent implements OnInit {
   onNotesChange(notes: string): void {
     this.currentNotes = notes;
     this.readingListService.updateNotes(this.workId, notes);
+  }
+
+  private isDescriptionClipped(): boolean {
+    const el = this.descText?.nativeElement;
+    return !!el && el.scrollHeight > el.clientHeight + 1;
   }
 
   getRelatedAuthors(work: SubjectWork): string[] {
