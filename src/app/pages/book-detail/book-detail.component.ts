@@ -1,4 +1,4 @@
-import { Component, ElementRef, OnInit, ViewChild } from '@angular/core';
+import { Component, ElementRef, OnInit, ViewChild, ChangeDetectorRef, AfterViewChecked, HostListener } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { switchMap } from 'rxjs';
 import { BookService } from '../../services/book.service';
@@ -216,7 +216,7 @@ import { formatDate } from '../../utils/format';
     }
   `],
 })
-export class BookDetailComponent implements OnInit {
+export class BookDetailComponent implements OnInit, AfterViewChecked {
   book?: BookDetail;
   loading = true;
   description = '';
@@ -232,12 +232,22 @@ export class BookDetailComponent implements OnInit {
   addedOn = '';
   private workId = '';
 
-  @ViewChild('descText') private descText?: ElementRef<HTMLElement>;
+  private _descText?: ElementRef<HTMLElement>;
+
+  @ViewChild('descText')
+  set descText(el: ElementRef<HTMLElement> | undefined) {
+    this._descText = el;
+    this.checkCanExpand();
+  }
+  get descText(): ElementRef<HTMLElement> | undefined {
+    return this._descText;
+  }
 
   constructor(
     private route: ActivatedRoute,
     private bookService: BookService,
     private readingListService: ReadingListService,
+    private cdr: ChangeDetectorRef,
   ) {}
 
   ngOnInit(): void {
@@ -252,7 +262,8 @@ export class BookDetailComponent implements OnInit {
       this.loading = false;
       this.description = this.bookService.extractDescription(book.description);
       this.expanded = false;
-      this.canExpand = this.isDescriptionClipped();
+      this.canExpand = false;
+      this.checkCanExpand();
       this.coverId = book.covers?.[0];
       this.authors = [];
       this.year = undefined;
@@ -311,8 +322,44 @@ export class BookDetailComponent implements OnInit {
     this.readingListService.updateNotes(this.workId, notes);
   }
 
+  ngAfterViewChecked(): void {
+    if (!this.expanded && !this.canExpand && this._descText?.nativeElement) {
+      const el = this._descText.nativeElement;
+      if (el.scrollHeight > el.clientHeight + 1) {
+        this.canExpand = true;
+        this.cdr.detectChanges();
+      }
+    }
+  }
+
+  @HostListener('window:resize')
+  onResize(): void {
+    if (!this.expanded && this._descText?.nativeElement) {
+      const el = this._descText.nativeElement;
+      const clipped = el.scrollHeight > el.clientHeight + 1;
+      if (this.canExpand !== clipped) {
+        this.canExpand = clipped;
+        this.cdr.markForCheck();
+      }
+    }
+  }
+
+  private checkCanExpand(): void {
+    if (this.expanded) return;
+    setTimeout(() => {
+      if (!this.expanded && this._descText?.nativeElement) {
+        const el = this._descText.nativeElement;
+        const clipped = el.scrollHeight > el.clientHeight + 1;
+        if (this.canExpand !== clipped) {
+          this.canExpand = clipped;
+          this.cdr.markForCheck();
+        }
+      }
+    }, 0);
+  }
+
   private isDescriptionClipped(): boolean {
-    const el = this.descText?.nativeElement;
+    const el = this._descText?.nativeElement;
     return !!el && el.scrollHeight > el.clientHeight + 1;
   }
 
